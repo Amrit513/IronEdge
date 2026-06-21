@@ -1914,10 +1914,30 @@ burger.addEventListener('click', () => mobNav.classList.contains('open') ? close
 mobClose.addEventListener('click', closeNav);
 document.querySelectorAll('.mob-lnk').forEach(l => l.addEventListener('click', closeNav));
 
-/* ── PREVENT ZOOM BELOW 100% (iOS) ── */
-document.addEventListener('gesturestart', function(e) {
-  if (window.visualViewport && window.visualViewport.scale <= 1) e.preventDefault();
-}, { passive: false });
+/* ── ZOOM CONTROL: allow zoom-in, block zoom-out past 100% ── */
+(function() {
+  var _prevDist = null;
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      var dx = e.touches[0].pageX - e.touches[1].pageX;
+      var dy = e.touches[0].pageY - e.touches[1].pageY;
+      _prevDist = Math.hypot(dx, dy);
+    } else {
+      _prevDist = null;
+    }
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    if (e.touches.length !== 2) { _prevDist = null; return; }
+    var dx = e.touches[0].pageX - e.touches[1].pageX;
+    var dy = e.touches[0].pageY - e.touches[1].pageY;
+    var dist = Math.hypot(dx, dy);
+    var scale = (window.visualViewport && window.visualViewport.scale) || 1;
+    if (_prevDist !== null && dist < _prevDist && scale <= 1.02) {
+      e.preventDefault();
+    }
+    _prevDist = dist;
+  }, { passive: false });
+})();
 
 /* ── PROGRESS BAR ── */
 const progressBar = document.getElementById('progress-bar');
